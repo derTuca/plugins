@@ -11,7 +11,6 @@ void main() {
   runApp(MyApp());
 }
 
-/// A sample app for launching intents.
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -30,7 +29,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Holds the different intent widgets.
 class MyHomePage extends StatelessWidget {
   void _createAlarm() {
     final AndroidIntent intent = const AndroidIntent(
@@ -82,11 +80,9 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
-/// Launches intents to specific Android activities.
 class ExplicitIntentsWidget extends StatelessWidget {
-  const ExplicitIntentsWidget(); // ignore: public_member_api_docs
+  const ExplicitIntentsWidget();
 
-  // ignore: public_member_api_docs
   static const String routeName = "/explicitIntents";
 
   void _openGoogleMapsStreetView() {

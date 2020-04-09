@@ -34,30 +34,8 @@
 
 @end
 
-@implementation FLTWKWebView
-
-- (void)setFrame:(CGRect)frame {
-  [super setFrame:frame];
-  self.scrollView.contentInset = UIEdgeInsetsZero;
-  // We don't want the contentInsets to be adjusted by iOS, flutter should always take control of
-  // webview's contentInsets.
-  // self.scrollView.contentInset = UIEdgeInsetsZero;
-  if (@available(iOS 11, *)) {
-    // Above iOS 11, adjust contentInset to compensate the adjustedContentInset so the sum will
-    // always be 0.
-    if (UIEdgeInsetsEqualToEdgeInsets(self.scrollView.adjustedContentInset, UIEdgeInsetsZero)) {
-      return;
-    }
-    UIEdgeInsets insetToAdjust = self.scrollView.adjustedContentInset;
-    self.scrollView.contentInset = UIEdgeInsetsMake(-insetToAdjust.top, -insetToAdjust.left,
-                                                    -insetToAdjust.bottom, -insetToAdjust.right);
-  }
-}
-
-@end
-
 @implementation FLTWebViewController {
-  FLTWKWebView* _webView;
+  WKWebView* _webView;
   int64_t _viewId;
   FlutterMethodChannel* _channel;
   NSString* _currentUrl;
@@ -70,7 +48,7 @@
                viewIdentifier:(int64_t)viewId
                     arguments:(id _Nullable)args
               binaryMessenger:(NSObject<FlutterBinaryMessenger>*)messenger {
-  if (self = [super init]) {
+  if ([super init]) {
     _viewId = viewId;
 
     NSString* channelName = [NSString stringWithFormat:@"plugins.flutter.io/webview_%lld", viewId];
@@ -91,21 +69,13 @@
     [self updateAutoMediaPlaybackPolicy:args[@"autoMediaPlaybackPolicy"]
                         inConfiguration:configuration];
 
-    _webView = [[FLTWKWebView alloc] initWithFrame:frame configuration:configuration];
+    _webView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
     _navigationDelegate = [[FLTWKNavigationDelegate alloc] initWithChannel:_channel];
-    _webView.UIDelegate = self;
     _webView.navigationDelegate = _navigationDelegate;
     __weak __typeof__(self) weakSelf = self;
     [_channel setMethodCallHandler:^(FlutterMethodCall* call, FlutterResult result) {
       [weakSelf onMethodCall:call result:result];
     }];
-
-    if (@available(iOS 11.0, *)) {
-      _webView.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-      if (@available(iOS 13.0, *)) {
-        _webView.scrollView.automaticallyAdjustsScrollIndicatorInsets = NO;
-      }
-    }
 
     [self applySettings:settings];
     // TODO(amirh): return an error if apply settings failed once it's possible to do so.
@@ -148,8 +118,6 @@
     [self onRemoveJavaScriptChannels:call result:result];
   } else if ([[call method] isEqualToString:@"clearCache"]) {
     [self clearCache:result];
-  } else if ([[call method] isEqualToString:@"getTitle"]) {
-    [self onGetTitle:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
@@ -270,11 +238,6 @@
   }
 }
 
-- (void)onGetTitle:(FlutterResult)result {
-  NSString* title = _webView.title;
-  result(title);
-}
-
 // Returns nil when successful, or an error message when one or more keys are unknown.
 - (NSString*)applySettings:(NSDictionary<NSString*, id>*)settings {
   NSMutableArray<NSString*>* unknownKeys = [[NSMutableArray alloc] init];
@@ -287,10 +250,6 @@
       _navigationDelegate.hasDartNavigationDelegate = [hasDartNavigationDelegate boolValue];
     } else if ([key isEqualToString:@"debuggingEnabled"]) {
       // no-op debugging is always enabled on iOS.
-    } else if ([key isEqualToString:@"gestureNavigationEnabled"]) {
-      NSNumber* allowsBackForwardNavigationGestures = settings[key];
-      _webView.allowsBackForwardNavigationGestures =
-          [allowsBackForwardNavigationGestures boolValue];
     } else if ([key isEqualToString:@"userAgent"]) {
       NSString* userAgent = settings[key];
       [self updateUserAgent:[userAgent isEqual:[NSNull null]] ? nil : userAgent];
@@ -397,19 +356,6 @@
   } else {
     NSLog(@"Updating UserAgent is not supported for Flutter WebViews prior to iOS 9.");
   }
-}
-
-#pragma mark WKUIDelegate
-
-- (WKWebView*)webView:(WKWebView*)webView
-    createWebViewWithConfiguration:(WKWebViewConfiguration*)configuration
-               forNavigationAction:(WKNavigationAction*)navigationAction
-                    windowFeatures:(WKWindowFeatures*)windowFeatures {
-  if (!navigationAction.targetFrame.isMainFrame) {
-    [webView loadRequest:navigationAction.request];
-  }
-
-  return nil;
 }
 
 @end

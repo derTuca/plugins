@@ -9,10 +9,6 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'consumable_store.dart';
 
 void main() {
-  // For play billing library 2.0 on Android, it is mandatory to call
-  // [enablePendingPurchases](https://developer.android.com/reference/com/android/billingclient/api/BillingClient.Builder.html#enablependingpurchases)
-  // as part of initializing the app.
-  InAppPurchaseConnection.enablePendingPurchases();
   runApp(MyApp());
 }
 
@@ -40,7 +36,7 @@ class _MyAppState extends State<MyApp> {
   bool _isAvailable = false;
   bool _purchasePending = false;
   bool _loading = true;
-  String _queryProductError;
+  String _queryProductError = null;
 
   @override
   void initState() {
@@ -153,12 +149,12 @@ class _MyAppState extends State<MyApp> {
       stack.add(
         Stack(
           children: [
-            Opacity(
+            new Opacity(
               opacity: 0.3,
               child: const ModalBarrier(dismissible: false, color: Colors.grey),
             ),
-            Center(
-              child: CircularProgressIndicator(),
+            new Center(
+              child: new CircularProgressIndicator(),
             ),
           ],
         ),
@@ -213,9 +209,11 @@ class _MyAppState extends State<MyApp> {
     if (!_isAvailable) {
       return Card();
     }
-    final ListTile productHeader = ListTile(title: Text('Products for Sale'));
+    final ListTile productHeader = ListTile(
+        title: Text('Products for Sale',
+            style: Theme.of(context).textTheme.headline));
     List<ListTile> productList = <ListTile>[];
-    if (_notFoundIds.isNotEmpty) {
+    if (!_notFoundIds.isEmpty) {
       productList.add(ListTile(
           title: Text('[${_notFoundIds.join(", ")}] not found',
               style: TextStyle(color: ThemeData.light().errorColor)),
@@ -228,7 +226,7 @@ class _MyAppState extends State<MyApp> {
     // We recommend that you use your own server to verity the purchase data.
     Map<String, PurchaseDetails> purchases =
         Map.fromEntries(_purchases.map((PurchaseDetails purchase) {
-      if (purchase.pendingCompletePurchase) {
+      if (Platform.isIOS) {
         InAppPurchaseConnection.instance.completePurchase(purchase);
       }
       return MapEntry<String, PurchaseDetails>(purchase.productID, purchase);
@@ -282,8 +280,9 @@ class _MyAppState extends State<MyApp> {
     if (!_isAvailable || _notFoundIds.contains(_kConsumableId)) {
       return Card();
     }
-    final ListTile consumableHeader =
-        ListTile(title: Text('Purchased consumables'));
+    final ListTile consumableHeader = ListTile(
+        title: Text('Purchased consumables',
+            style: Theme.of(context).textTheme.headline));
     final List<Widget> tokens = _consumables.map((String id) {
       return GridTile(
         child: IconButton(
@@ -357,6 +356,9 @@ class _MyAppState extends State<MyApp> {
     // handle invalid purchase here if  _verifyPurchase` failed.
   }
 
+  static ListTile buildListCard(ListTile innerTile) =>
+      ListTile(title: Card(child: innerTile));
+
   void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
     purchaseDetailsList.forEach((PurchaseDetails purchaseDetails) async {
       if (purchaseDetails.status == PurchaseStatus.pending) {
@@ -370,18 +372,14 @@ class _MyAppState extends State<MyApp> {
             deliverProduct(purchaseDetails);
           } else {
             _handleInvalidPurchase(purchaseDetails);
-            return;
           }
         }
-        if (Platform.isAndroid) {
+        if (Platform.isIOS) {
+          InAppPurchaseConnection.instance.completePurchase(purchaseDetails);
+        } else if (Platform.isAndroid) {
           if (!kAutoConsume && purchaseDetails.productID == _kConsumableId) {
-            await InAppPurchaseConnection.instance
-                .consumePurchase(purchaseDetails);
+            InAppPurchaseConnection.instance.consumePurchase(purchaseDetails);
           }
-        }
-        if (purchaseDetails.pendingCompletePurchase) {
-          await InAppPurchaseConnection.instance
-              .completePurchase(purchaseDetails);
         }
       }
     });

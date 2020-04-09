@@ -245,7 +245,7 @@ void main() {
       subscription = stream.listen((purchaseDetailsList) {
         details.addAll(purchaseDetailsList);
         purchaseDetailsList.forEach((purchaseDetails) {
-          if (purchaseDetails.pendingCompletePurchase) {
+          if (purchaseDetails.status == PurchaseStatus.purchased) {
             AppStoreConnection.instance.completePurchase(purchaseDetails);
             completer.complete(details);
             subscription.cancel();

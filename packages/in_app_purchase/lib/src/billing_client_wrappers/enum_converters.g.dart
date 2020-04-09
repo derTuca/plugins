@@ -9,40 +9,29 @@ part of 'enum_converters.dart';
 _SerializedEnums _$_SerializedEnumsFromJson(Map json) {
   return _SerializedEnums()
     ..response = _$enumDecode(_$BillingResponseEnumMap, json['response'])
-    ..type = _$enumDecode(_$SkuTypeEnumMap, json['type'])
-    ..purchaseState =
-        _$enumDecode(_$PurchaseStateWrapperEnumMap, json['purchaseState']);
+    ..type = _$enumDecode(_$SkuTypeEnumMap, json['type']);
 }
 
 Map<String, dynamic> _$_SerializedEnumsToJson(_SerializedEnums instance) =>
     <String, dynamic>{
       'response': _$BillingResponseEnumMap[instance.response],
-      'type': _$SkuTypeEnumMap[instance.type],
-      'purchaseState': _$PurchaseStateWrapperEnumMap[instance.purchaseState],
+      'type': _$SkuTypeEnumMap[instance.type]
     };
 
-T _$enumDecode<T>(
-  Map<T, dynamic> enumValues,
-  dynamic source, {
-  T unknownValue,
-}) {
+T _$enumDecode<T>(Map<T, dynamic> enumValues, dynamic source) {
   if (source == null) {
     throw ArgumentError('A value must be provided. Supported values: '
         '${enumValues.values.join(', ')}');
   }
-
-  final value = enumValues.entries
-      .singleWhere((e) => e.value == source, orElse: () => null)
-      ?.key;
-
-  if (value == null && unknownValue == null) {
-    throw ArgumentError('`$source` is not one of the supported values: '
-        '${enumValues.values.join(', ')}');
-  }
-  return value ?? unknownValue;
+  return enumValues.entries
+      .singleWhere((e) => e.value == source,
+          orElse: () => throw ArgumentError(
+              '`$source` is not one of the supported values: '
+              '${enumValues.values.join(', ')}'))
+      .key;
 }
 
-const _$BillingResponseEnumMap = {
+const _$BillingResponseEnumMap = <BillingResponse, dynamic>{
   BillingResponse.featureNotSupported: -2,
   BillingResponse.serviceDisconnected: -1,
   BillingResponse.ok: 0,
@@ -53,16 +42,10 @@ const _$BillingResponseEnumMap = {
   BillingResponse.developerError: 5,
   BillingResponse.error: 6,
   BillingResponse.itemAlreadyOwned: 7,
-  BillingResponse.itemNotOwned: 8,
+  BillingResponse.itemNotOwned: 8
 };
 
-const _$SkuTypeEnumMap = {
+const _$SkuTypeEnumMap = <SkuType, dynamic>{
   SkuType.inapp: 'inapp',
-  SkuType.subs: 'subs',
-};
-
-const _$PurchaseStateWrapperEnumMap = {
-  PurchaseStateWrapper.unspecified_state: 0,
-  PurchaseStateWrapper.purchased: 1,
-  PurchaseStateWrapper.pending: 2,
+  SkuType.subs: 'subs'
 };
