@@ -1,3 +1,21 @@
+## 0.4.3+1
+
+* Post-v2 Android embedding cleanup.
+
+## 0.4.3
+
+* Uses CompletableFuture from android-retrofuture allow compatibility with API < 24.
+
+## 0.4.2
+
+* Adds support for Android E2E tests that utilize other @Rule's, like GrantPermissionRule.
+* Fix CocoaPods podspec lint warnings.
+
+## 0.4.1
+
+* Remove Android dependencies fallback.
+* Require Flutter SDK 1.12.13+hotfix.5 or greater.
+
 ## 0.4.0
 
 * **Breaking change** Driver request_data call's response has changed to
